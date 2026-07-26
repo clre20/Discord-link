@@ -1,7 +1,7 @@
 # 🔗 DiscordLink
 
 <p align="center">
-  <img src="cover.jpg" alt="DiscordLink Logo" width="250px" style="border-radius: 15px;"/>
+  <img src="DiscordLink.jpg" alt="DiscordLink Logo" width="250px" style="border-radius: 15px;"/>
 </p>
 
 <p align="center">
