@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.awt.Color;
 import java.util.UUID;
@@ -180,5 +182,85 @@ public class DiscordListener extends ListenerAdapter {
                 event.getChannel().sendMessageEmbeds(failEmbed.build()).queue();
             }
         }
+    }
+
+    @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        if (!event.isFromGuild()) {
+            event.reply("此指令只能在伺服器（Guild）中使用。").setEphemeral(true).queue();
+            return;
+        }
+
+        boolean isAdmin = event.getMember() != null && (
+                event.getMember().hasPermission(Permission.ADMINISTRATOR) ||
+                event.getMember().hasPermission(Permission.MANAGE_SERVER)
+        );
+
+        if (!isAdmin) {
+            event.reply("❌ 您沒有權限執行此指令（需要管理員或管理伺服器權限）。").setEphemeral(true).queue();
+            return;
+        }
+
+        String commandName = event.getName();
+        if (commandName.equals("querydc")) {
+            String playerName = event.getOption("player").getAsString().trim();
+            handleQueryDc(event, playerName);
+        } else if (commandName.equals("querymc")) {
+            String userInput = event.getOption("user").getAsString().trim();
+            handleQueryMc(event, userInput);
+        }
+    }
+
+    private void handleQueryDc(SlashCommandInteractionEvent event, String playerName) {
+        event.deferReply().queue();
+
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                OfflinePlayer player = plugin.getServer().getOfflinePlayer(playerName);
+                UUID uuid = player.getUniqueId();
+                String discordId = dbManager.getDiscordId(uuid);
+
+                if (discordId == null) {
+                    event.getHook().sendMessage("❌ 玩家 **" + playerName + "** 尚未綁定 Discord 帳號。").queue();
+                } else {
+                    event.getHook().sendMessage("🔍 玩家 **" + (player.getName() != null ? player.getName() : playerName) + "** 綁定的 Discord 帳號為: <@" + discordId + "> (`" + discordId + "`)").queue();
+                }
+            } catch (Exception e) {
+                event.getHook().sendMessage("❌ 查詢過程中發生錯誤: " + e.getMessage()).queue();
+            }
+        });
+    }
+
+    private void handleQueryMc(SlashCommandInteractionEvent event, String userInput) {
+        event.deferReply().queue();
+
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                String discordId = userInput;
+                if (userInput.startsWith("<@") && userInput.endsWith(">")) {
+                    discordId = userInput.replaceAll("[^0-9]", "");
+                }
+
+                if (!discordId.matches("\\d{17,20}")) {
+                    event.getHook().sendMessage("❌ 無效的 Discord ID 或 Mention 格式！").queue();
+                    return;
+                }
+
+                java.util.List<UUID> uuids = dbManager.getBoundUuids(discordId);
+                if (uuids.isEmpty()) {
+                    event.getHook().sendMessage("❌ Discord 帳號 <@" + discordId + "> (`" + discordId + "`) 未綁定任何 Minecraft 帳號。").queue();
+                } else {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("🔍 Discord 帳號 <@").append(discordId).append("> (`").append(discordId).append("`) 綁定的 Minecraft 帳號有：\n");
+                    for (UUID uuid : uuids) {
+                        OfflinePlayer op = plugin.getServer().getOfflinePlayer(uuid);
+                        sb.append("- **").append(op.getName() != null ? op.getName() : "未知玩家").append("** (`").append(uuid).append("`)\n");
+                    }
+                    event.getHook().sendMessage(sb.toString()).queue();
+                }
+            } catch (Exception e) {
+                event.getHook().sendMessage("❌ 查詢過程中發生錯誤: " + e.getMessage()).queue();
+            }
+        });
     }
 }

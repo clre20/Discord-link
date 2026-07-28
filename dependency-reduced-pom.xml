@@ -4,7 +4,7 @@
   <groupId>clre20</groupId>
   <artifactId>DiscordLink</artifactId>
   <name>DiscordLink</name>
-  <version>1.4.7</version>
+  <version>1.6.7</version>
   <build>
     <defaultGoal>clean package</defaultGoal>
     <resources>

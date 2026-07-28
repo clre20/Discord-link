@@ -10,6 +10,7 @@ public final class DiscordLink extends JavaPlugin {
 
     private JDA jda;
     private DatabaseManager dbManager;
+    private ApiServer apiServer;
     private final MiniMessage mm = MiniMessage.miniMessage();
 
     // 1. 帶顏色控制台 log 輔助方法
@@ -51,6 +52,25 @@ public final class DiscordLink extends JavaPlugin {
         // 初始化設定檔
         saveDefaultConfig();
 
+        // 自動生成 API Key 邏輯
+        if (!getConfig().contains("api.key") || "GENERATE".equalsIgnoreCase(getConfig().getString("api.key"))) {
+            java.security.SecureRandom random = new java.security.SecureRandom();
+            byte[] bytes = new byte[32]; // 32 bytes = 256 bits
+            random.nextBytes(bytes);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            String randomKey = sb.toString(); // 64 字元的 Hex 字串
+
+            getConfig().set("api.enabled", getConfig().getBoolean("api.enabled", true));
+            getConfig().set("api.port", getConfig().getInt("api.port", 25580));
+            getConfig().set("api.key", randomKey);
+            saveConfig();
+            String maskedKey = randomKey.substring(0, 4) + "********************************************************" + randomKey.substring(60);
+            logInfo("已自動為 HTTP API 生成隨機安全金鑰 (64 hex): " + maskedKey + " 並儲存至 config.yml 中！");
+        }
+
         // 檢查是否需要補齊新版設定項目 (保留玩家現有設定值)
         if (!getConfig().contains("embeds.verify-success.title")) {
             getConfig().options().copyDefaults(true);
@@ -84,6 +104,14 @@ public final class DiscordLink extends JavaPlugin {
         getCommand("discordlink").setExecutor(commandExecutor);
         getCommand("discordlink").setTabCompleter(commandExecutor);
 
+        // 啟動 API 伺服器
+        if (getConfig().getBoolean("api.enabled", true)) {
+            int apiPort = getConfig().getInt("api.port", 25580);
+            String apiKey = getConfig().getString("api.key");
+            apiServer = new ApiServer(this, dbManager, apiPort, apiKey);
+            apiServer.start();
+        }
+
         // 初始化 JDA
         try {
             jda = JDABuilder.createDefault(token)
@@ -92,6 +120,18 @@ public final class DiscordLink extends JavaPlugin {
                     .build();
             jda.awaitReady();
             logSuccess("Discord 機器人已成功啟動並連線！");
+
+            // 註冊 Slash 指令
+            jda.updateCommands().addCommands(
+                    net.dv8tion.jda.api.interactions.commands.build.Commands.slash("querydc", "輸入 Minecraft 玩家名稱查詢綁定的 Discord 帳號")
+                            .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.STRING, "player", "Minecraft 玩家名稱", true),
+                    net.dv8tion.jda.api.interactions.commands.build.Commands.slash("querymc", "輸入 Discord 用戶或 ID 查詢綁定的 Minecraft 帳號")
+                            .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.STRING, "user", "Discord 用戶 ID、提及(Mention)或名稱", true)
+            ).queue(
+                    success -> logInfo("已成功向 Discord 註冊斜線指令 (querydc / querymc)"),
+                    error -> logError("註冊斜線指令失敗: " + error.getMessage())
+            );
+
             printConfigReport();
         } catch (Exception e) {
             logError("無法啟動 Discord 機器人，請檢查 Token 是否正確。");
@@ -111,6 +151,9 @@ public final class DiscordLink extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (apiServer != null) {
+            apiServer.stop();
+        }
         if (jda != null) {
             try {
                 // 優先使用優雅關閉

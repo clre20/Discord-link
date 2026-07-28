@@ -61,7 +61,7 @@ embeds:
   # D. 私訊通知卡片
   private-message:
     enabled: true
-    title: "🎉 帳號綁定成功 (Account Linked)"
+    title: "🎉 帳號綁定成功 "
     description: "您的 Discord 帳號已成功與 Minecraft 帳號 **{player}** 完成綁定！\n現在您可以隨時進入伺服器遊玩囉。"
     color: "#2ECC71"
     footer: "極光の幻想鄉 • 驗證系統"
@@ -71,7 +71,17 @@ embeds:
     enabled: true
     # 管理員日誌文字頻道 ID
     channel-id: "YOUR_ADMIN_LOG_CHANNEL_ID"
-    title: "📥 帳號綁定日誌 (Admin Log)"
+    title: "📥 帳號綁定日誌"
     description: "Discord 用戶 <@{discord_id}> (`{discord_id}`) 已成功綁定 Minecraft 帳號 **{player}**\nUUID: `{uuid}`"
     color: "#3498DB"
     footer: "極光の幻想鄉 • 驗證系統"
+
+# 6. HTTP API 設定 (供第三方 Python 等程式調取資料)
+api:
+  # 是否啟用 HTTP API 服務
+  enabled: true
+  # HTTP API 監聽的連接埠 (Port)
+  port: 25580
+  # 第一次啟動時，若為 "GENERATE" 則會隨機生成一組 16 位金鑰並寫回此處。
+  # 之後您可以手動修改此金鑰。
+  key: "GENERATE"

@@ -6,7 +6,7 @@
 
     <groupId>clre20</groupId>
     <artifactId>DiscordLink</artifactId>
-    <version>1.4.7</version>
+    <version>1.6.7</version>
     <packaging>jar</packaging>
 
     <name>DiscordLink</name>
