@@ -6,13 +6,13 @@
 
     <groupId>clre20</groupId>
     <artifactId>DiscordLink</artifactId>
-    <version>1.7.0</version>
+    <version>1.8.3</version>
     <packaging>jar</packaging>
 
     <name>DiscordLink</name>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.11-R0.1-SNAPSHOT</version>
+            <version>26.1.2.build.74-stable</version>
             <scope>provided</scope>
         </dependency>
         <!-- 伺服器內附，不打包 -->
@@ -99,6 +99,13 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- 擷取後台日誌給控制台頻道（伺服器內附，不打包） -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.24.3</version>
             <scope>provided</scope>
         </dependency>
         <!-- 共用 HTTP 端口（選用，softdepend） -->
