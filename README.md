@@ -1,26 +1,37 @@
 # DiscordLink
 
-DiscordLink 是 Paper 伺服器的 Discord 帳號綁定插件。玩家在遊戲取得 5 位數代碼，到 Discord 驗證頻道輸入即可完成綁定；可設定成「未綁定不能進服」。
+DiscordLink 是 Paper 伺服器的 Discord 整合插件：帳號綁定、聊天互通、控制台頻道、各種通知、線上玩家清單，以及聊天中的 `[item]`、`[inv]`、`[ender]` 物品展示（Discord 端附上圖片）。一個插件、一個機器人連線，取代 DiscordSRV、InteractiveChat 與 InteractiveChat DiscordSRV Addon。
 
 ## 功能特性
 
-* **兩種模式**：
+* **帳號綁定**：
   * **強制綁定**：未綁定的玩家連線時被擋下，畫面直接顯示代碼。
   * **自由綁定**：玩家可以進服，用 `/dclink link` 取得代碼。
-* **防止亂猜代碼**：同一個 Discord 帳號輸錯太多次會暫停一段時間（可設定）。
-* **免驗證名單**：指定玩家不需綁定（支援從未進過伺服器的玩家）。
-* **Discord 卡片與斜線指令**：綁定成功／失敗卡片、私訊通知、管理員日誌；管理員可用 `/querydc`、`/querymc` 查詢。
-* **HTTP API（經 HttpHub）**：讓網站或機器人查詢綁定資料，與其他插件共用同一個端口。
+  * 防止亂猜代碼、免驗證名單、綁定後自動給身分組與同步暱稱。
+* **聊天互通**：
+  * 遊戲聊天用 Webhook 送到 Discord，顯示玩家頭像與名稱；Discord 訊息顯示在遊戲裡（支援回覆、附件連結、表情與提及）。
+  * 已綁定的成員在遊戲裡顯示 Minecraft 名稱；所有訊息都不會觸發 `@everyone`。
+  * 被禁言插件取消的聊天不會轉送。
+* **控制台頻道**：後台訊息合併後送到 Discord（遮住 IP 與 Token），指定身分組可以在頻道輸入後台指令，並有指令黑名單。
+* **通知**：伺服器啟動／關閉、加入、離開、第一次加入、死亡、成就（含 [CustomMilestone](https://github.com/clre20/CustomMilestone) 的自訂成就）；每一種都能分別開關、分別送到不同頻道；隱身中的玩家不會通知。
+* **線上玩家清單**：在聊天頻道輸入 `playerlist`，或使用斜線指令 `/playerlist`。
+* **機器人狀態與頻道主題**：顯示線上人數與 TPS。
+* **物品展示**（與 InteractiveChat 相同的樣式）：
+  * 聊天輸入 `[item]` 變成 `[物品名稱 x數量]`，滑鼠移上去看完整說明，點擊開啟「物品」介面；空手時顯示 `[空氣]`。
+  * `[inv]`、`[ender]` 點擊後開啟背包（含頭顱、藥水效果、裝備）／終界箱快照；所有介面都是唯讀箱子介面。
+  * Discord 端附上嵌入卡片：物品名稱與顏色、右上角物品圖示、與遊戲相同的說明框圖片（含物品 ID 等進階資訊），背包／終界箱則附上介面圖片（第一次使用時自動下載原版材質，約 4.5 MB）。
+* **提及玩家**：聊天中提到線上玩家的名稱，對方會聽到音效並看到提示。
 * **所有文字可改**：遊戲訊息、斷線畫面、Discord 卡片都在 `messages.yml`，支援 MiniMessage 與 `&` 顏色碼。
-* **設定自動補齊**：更新後自動補上新項目並保留原本的值；舊版設定會自動搬到新格式。
-* **版本檢查**：啟動時檢查 GitHub 新版本；有新版時管理員登入 3 秒後會收到提醒。
-* **輕量**：綁定資料放在記憶體，資料庫在背景寫入；Discord 連線不會卡住伺服器啟動。
+* **設定自動補齊**：更新後自動補上新項目並保留原本的值。
+* **輕量**：綁定資料在記憶體、資料庫背景寫入；圖片與 Discord 傳送都在背景執行緒，佇列有上限。
+* **HTTP API（經 HttpHub）**、**版本檢查**。
 
 ## 支援環境
 
-* Paper 1.21.11、26.x（Purpur 等 Paper 分支理論上相容；不支援 Spigot、Folia）
-* Java 21 以上（26.x 伺服器需要 Java 25）
+* Paper 26.x（Purpur 等 Paper 分支理論上相容；不支援 Spigot、Folia）
+* Java 25 以上
 * 選用：[HttpHub](https://github.com/clre20/HttpHub)（要用 HTTP API 時才需要）
+* 同時安裝 DiscordSRV 或 InteractiveChat 時，重疊的功能會自動停用並在後台提示；建議移除它們。
 
 ## 指令與權限
 
@@ -41,28 +52,47 @@ DiscordLink 是 Paper 伺服器的 Discord 帳號綁定插件。玩家在遊戲�
 
 > 有 `discordlink.version` 的玩家，在有新版本時登入 3 秒後會收到提醒。
 
+### 聊天功能權限
+
+| 功能 | 權限 | 預設 |
+| :--- | :--- | :--- |
+| `[item]` 展示手上物品 | `discordlink.showcase.item` | 所有人 |
+| `[inv]` 展示背包 | `discordlink.showcase.inventory` | 所有人 |
+| `[ender]` 展示終界箱 | `discordlink.showcase.ender` | 所有人 |
+| 提及玩家 | `discordlink.mention` | 所有人 |
+
 ### Discord 斜線指令
 
-> 只有具備「管理員」或「管理伺服器」權限的成員能用，回覆只有自己看得到。
-
-| 指令 | 說明 | 參數 |
+| 指令 | 說明 | 可使用 |
 | :--- | :--- | :--- |
-| `/querydc` | 用 Minecraft 玩家查詢綁定的 Discord | `player`：玩家名稱或 UUID |
-| `/querymc` | 用 Discord 用戶查詢綁定的 Minecraft 帳號 | `user`：Discord ID 或提及 |
+| `/playerlist` | 線上玩家清單（只有自己看得到） | 所有人 |
+| `/querydc` | 用 Minecraft 玩家查詢綁定的 Discord（`player`：玩家名稱或 UUID） | 「管理員」或「管理伺服器」 |
+| `/querymc` | 用 Discord 用戶查詢綁定的 Minecraft 帳號（`user`：Discord ID 或提及） | 「管理員」或「管理伺服器」 |
 
 ## 使用範例
 
 ### 1. 第一次設定
 
-1. 在 [Discord Developer Portal](https://discord.com/developers/applications) 建立機器人，開啟 **Message Content Intent**，邀請進伺服器。
+1. 在 [Discord Developer Portal](https://discord.com/developers/applications) 建立機器人，開啟 **Message Content Intent**，邀請進伺服器。機器人需要的權限：讀取／傳送訊息、嵌入連結、附加檔案、新增反應、管理 Webhook；要同步暱稱或身分組時再加「管理暱稱」「管理身分組」，要改頻道主題時加「管理頻道」。
 2. 編輯 `plugins/DiscordLink/config.yml`：
 
 ```yaml
 discord:
   token: "你的機器人 Token"
   verify-channel-id: "驗證頻道 ID"
-  admin-log:
-    channel-id: "管理員日誌頻道 ID"
+chat:
+  channel-id: "聊天頻道 ID"
+console:
+  enabled: true
+  channel-id: "控制台頻道 ID（只給管理員看）"
+# 每種通知可分別指定頻道（留空 = 聊天頻道）
+notifications:
+  join:
+    enabled: true
+    channel-id: "加入離開頻道 ID"
+  death:
+    enabled: true
+    channel-id: "死亡頻道 ID"
 ```
 
 3. 執行 `/dclink reload`（或重啟伺服器）。
@@ -76,13 +106,18 @@ discord:
 # 接著把 5 位數代碼貼到 Discord 驗證頻道
 ```
 
-### 3. 管理
+### 3. 物品展示
 
-```bash
-/dclink admin query Steve
-/dclink admin unbind 123456789012345678
-/dclink bypass add Notch
+```text
+看我的新劍 [item]
+這是我的背包 [inv]，終界箱 [ender]
 ```
+
+遊戲裡會變成可以懸停、點擊的文字；Discord 聊天頻道會同時收到對應的圖片。
+
+### 4. 從控制台頻道執行指令
+
+在控制台頻道直接輸入指令（不用加 `/`），成功會加上 ✅。只有 `console.command-role-ids` 裡的身分組或「管理員」能用；`console.command-blacklist` 的指令（包含 `minecraft:stop`、`execute … run stop` 這類寫法）一律擋下。
 
 ## HTTP API
 
@@ -130,9 +165,10 @@ print(requests.get(API_URL, headers=headers, params={"action": "query_mc", "targ
 
 | 檔案 | 內容 |
 | :--- | :--- |
-| `config.yml` | Token、頻道、模式、綁定上限、輸錯限制、API、版本檢查 |
-| `messages.yml` | 所有遊戲訊息、斷線畫面、Discord 卡片與斜線指令文字 |
-| `database.db` | 綁定與免驗證名單（SQLite） |
+| `config.yml` | Token、頻道、綁定、聊天、控制台、通知、狀態、物品展示、提及、API、版本檢查 |
+| `messages.yml` | 所有遊戲訊息、斷線畫面、Discord 卡片、通知與斜線指令文字 |
+| `database.db` | 綁定與免驗證名單（SQLite，格式與舊版相同） |
+| `assets/` | 物品展示圖片用的原版材質快取（換 Minecraft 版本時自動更新並刪除舊的） |
 
 ## 開發者
 
@@ -145,16 +181,22 @@ mvn clean package
 
 # DiscordLink (English)
 
-Discord account linking for Paper servers. Players get a 5-digit code in game and type it in a Discord channel to link. Optionally block unlinked players from joining.
+All-in-one Discord integration for Paper 26.x: account linking, chat bridge, console channel, notifications, player list, and `[item]` / `[inv]` / `[ender]` showcases with rendered images on Discord. Replaces DiscordSRV, InteractiveChat and InteractiveChat DiscordSRV Addon with a single bot connection.
 
 ## Features
 
-* **Two modes**: forced linking (code shown on the disconnect screen) or free linking (`/dclink link`).
-* **Guess protection**: a Discord account that enters too many wrong codes is paused for a while.
-* **Bypass list**, **Discord embeds**, **admin slash commands** (`/querydc`, `/querymc`).
-* **HTTP API via HttpHub**: shares one HTTP port with other plugins: `/discordlink/api/query`.
-* **Editable text** in `messages.yml`; config files fill in missing keys automatically.
-* **Update checker** on startup, `/dclink version`, and a join reminder for admins.
+* **Linking**: forced or free linking with 5-digit codes, guess protection, bypass list, linked role and nickname sync.
+* **Chat bridge**: webhook messages with player avatars, replies, attachments; mentions are never pinged.
+* **Console channel**: batched log relay (IPs and token masked) and role-restricted commands with a blacklist.
+* **Notifications**: start/stop, join/quit/first join, death, advancements (including CustomMilestone).
+* **Player list**: type `playerlist` in the chat channel or use `/playerlist`.
+* **Showcase**: `[item]` hover, `[inv]` / `[ender]` read-only snapshots, rendered tooltip and inventory images on Discord.
+* **Mentions**: mentioned players get a sound and a notice.
+* **Editable text**, **auto-filled config**, **HTTP API via HttpHub**, **update checker**.
+
+## Requirements
+
+Paper 26.x, Java 25.
 
 ## Commands & Permissions
 
@@ -165,3 +207,5 @@ Discord account linking for Paper servers. Players get a 5-digit code in game an
 | `/dclink admin <query\|unbind\|list>` | Manage links | `discordlink.admin` | op |
 | `/dclink bypass <add\|remove\|list>` | Bypass list | `discordlink.admin` | op |
 | `/dclink reload` | Reload config | `discordlink.admin` | op |
+| `[item]` / `[inv]` / `[ender]` | Showcase in chat | `discordlink.showcase.item` / `.inventory` / `.ender` | everyone |
+| Mentions | Mention players in chat | `discordlink.mention` | everyone |

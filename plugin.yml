@@ -1,0 +1,46 @@
+name: DiscordLink
+version: '${project.version}'
+main: clre20.discordLink.DiscordLink
+api-version: '26.1'
+prefix: DiscordLink
+authors: [ Clre20 ]
+description: Discord 帳號綁定、聊天互通、控制台、通知與物品展示
+website: https://github.com/clre20/Discord-link
+# DiscordSRV、InteractiveChat 只用來偵測是否同時安裝（有的話停用重疊的功能）
+softdepend: [ HttpHub, DiscordSRV, InteractiveChat ]
+
+commands:
+  discordlink:
+    description: DiscordLink 指令
+    usage: /<command> [help|link|version|reload|bypass|admin]
+    aliases: [ dclink ]
+
+permissions:
+  discordlink.help:
+    description: 查看指令說明
+    default: true
+  discordlink.use:
+    description: 用 /dclink link 取得綁定代碼
+    default: true
+  discordlink.version:
+    description: 查看版本並檢查更新，有新版時登入會收到提醒
+    default: op
+  discordlink.showcase.item:
+    description: 在聊天中用 [item] 展示手上的物品
+    default: true
+  discordlink.showcase.inventory:
+    description: 在聊天中用 [inv] 展示背包
+    default: true
+  discordlink.showcase.ender:
+    description: 在聊天中用 [ender] 展示終界箱
+    default: true
+  discordlink.mention:
+    description: 在聊天中提及玩家（對方會收到音效與提示）
+    default: true
+  discordlink.admin:
+    description: 管理綁定、免驗證名單與重新載入
+    default: op
+    children:
+      discordlink.help: true
+      discordlink.use: true
+      discordlink.version: true
