@@ -22,7 +22,8 @@ import java.util.concurrent.TimeUnit;
 public final class DiscordBot {
 
     private final DiscordLink plugin;
-    private final DiscordListener listener;
+    private final Object[] listeners;
+    private final java.util.function.Consumer<JDA> onReady;
     private final ExecutorService lifecycle = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "DiscordLink-Discord");
         t.setDaemon(true);
@@ -34,9 +35,13 @@ public final class DiscordBot {
     private volatile boolean connecting;
     private volatile String token = "";
 
-    public DiscordBot(DiscordLink plugin, DiscordListener listener) {
+    /**
+     * @param onReady 每次連線就緒後在連線執行緒呼叫（準備 Webhook、檢查頻道等）
+     */
+    public DiscordBot(DiscordLink plugin, java.util.function.Consumer<JDA> onReady, Object... listeners) {
         this.plugin = plugin;
-        this.listener = listener;
+        this.onReady = onReady;
+        this.listeners = listeners;
     }
 
     /** 連線（或換 Token 後重新連線）。 */
@@ -91,7 +96,7 @@ public final class DiscordBot {
         connecting = true;
         try {
             j = JDABuilder.createLight(t, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
-                    .addEventListeners(listener)
+                    .addEventListeners(listeners)
                     .build();
             jda = j;
             j.awaitReady();
@@ -108,11 +113,18 @@ public final class DiscordBot {
                             .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_SERVER)),
                     Commands.slash("querymc", limit(msg.discord("slash.querymc-description")))
                             .addOption(OptionType.STRING, "user", limit(msg.discord("slash.querymc-option")), true)
-                            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_SERVER))
+                            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_SERVER)),
+                    Commands.slash("playerlist", limit(msg.discord("slash.playerlist-description")))
+                            .setContexts(net.dv8tion.jda.api.interactions.InteractionContextType.GUILD)
             ).queue(
                     ok -> plugin.getLogger().info(msg.console("slash-registered")),
                     err -> plugin.getLogger().warning(msg.console("slash-failed", "reason", err.getMessage()))
             );
+            try {
+                onReady.accept(j);
+            } catch (RuntimeException e) {
+                plugin.getLogger().warning("onReady: " + e);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             close(j);

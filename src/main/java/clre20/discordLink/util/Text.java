@@ -62,6 +62,39 @@ public final class Text {
         }
     }
 
+    /**
+     * 同 {@link #component}，另外可以放入 Component 變數（例如帶滑鼠提示的物品名稱）。
+     *
+     * @param parts {名稱} → Component
+     */
+    public static Component componentWith(String template, Map<String, Component> parts, Object... vars) {
+        if (template == null || template.isEmpty()) {
+            return Component.empty();
+        }
+        String s = legacyToMini(template);
+        List<TagResolver> resolvers = new ArrayList<>();
+        for (Map.Entry<String, Component> e : parts.entrySet()) {
+            String tag = "dlc_" + e.getKey();
+            if (s.contains("{" + e.getKey() + "}")) {
+                s = s.replace("{" + e.getKey() + "}", "<" + tag + ">");
+                resolvers.add(Placeholder.component(tag, e.getValue()));
+            }
+        }
+        for (int i = 0; i + 1 < vars.length; i += 2) {
+            String name = String.valueOf(vars[i]);
+            String tag = "dlv_" + name;
+            if (s.contains("{" + name + "}")) {
+                s = s.replace("{" + name + "}", "<" + tag + ">");
+                resolvers.add(Placeholder.unparsed(tag, String.valueOf(vars[i + 1])));
+            }
+        }
+        try {
+            return MM.deserialize(s, TagResolver.resolver(resolvers));
+        } catch (RuntimeException e) {
+            return Component.text(plainReplace(template, vars));
+        }
+    }
+
     /** 純文字：去掉顏色並替換變數（後台用）。 */
     public static String plain(String template, Object... vars) {
         return PlainTextComponentSerializer.plainText().serialize(component(template, vars));

@@ -1,7 +1,7 @@
 # DiscordLink 訊息
 # 遊戲內文字支援 MiniMessage（<green>、<gradient:blue:aqua>…）與 & 顏色碼
 # 變數格式 {name}；\n 換行
-messages-version: 1
+messages-version: 3
 
 no-permission: "<red>沒有權限。"
 player-only: "<red>只有玩家能用這個指令。"
@@ -36,6 +36,61 @@ kick: "<gradient:blue:aqua><bold>極光の幻想鄉</bold></gradient>\n<red>綁�
 
 # 資料庫無法讀取時（強制綁定模式）非 OP 看到的畫面
 locked-kick: "<red>伺服器驗證系統暫時無法使用，請稍後再試。"
+
+# 物品展示（[item]、[inv]、[ender]）
+showcase:
+  # {item} 物品名稱（空手時為「空氣」）、{amount} 數量文字（只有 1 個時為空）
+  item: "<white>[</white>{item}{amount}<white>]</white>"
+  amount: "<white> x{amount}</white>"
+  inventory: "<aqua>[{player} 的背包]</aqua>"
+  ender: "<light_purple>[{player} 的終界箱]</light_purple>"
+  # 滑鼠移到 [背包] 上顯示的文字
+  click-hover: "<gray>點擊查看（{minutes} 分鐘內有效）"
+  cooldown: "<red>展示背包太頻繁了，請 {seconds} 秒後再試。"
+  # 點擊後開啟的介面（Discord 圖片也用同樣的標題）
+  gui:
+    item-title: "{player} 的物品"
+    inventory-title: "{player} 的背包"
+    ender-title: "{player} 的終界箱"
+    filler: " "
+    # 背包介面左上角的頭顱，{health} 生命、{max_health} 最大生命、{food} 飢餓、{level} 等級；\n 換行
+    head-name: "<yellow>{player}"
+    head-lore: "<gray>生命：<red>{health}</red> / {max_health}\n<gray>飢餓：<gold>{food}</gold>\n<gray>等級：<green>{level}"
+    # 頭顱旁邊的藥水效果，{effect} 效果名稱、{level} 等級、{time} 剩餘時間
+    effects-name: "<aqua>藥水效果"
+    effect-line: "<gray>{effect} {level} <dark_gray>({time})"
+    effects-none: "<gray>沒有任何效果"
+    # 在介面裡左鍵點物品：一般物品開啟預覽，界伏盒、束口袋開啟內容；{item} 物品名稱
+    preview-title: "{item}"
+    contents-title: "{item} 的內容"
+    back: "<yellow>返回"
+
+# 提及玩家
+mention:
+  # 聊天中被提及的名稱樣式
+  highlight: "<yellow>@{player}</yellow>"
+  title: ""
+  subtitle: "<yellow>{sender} <gray>在聊天中提到了你"
+  actionbar: ""
+
+# Discord 傳到遊戲的聊天
+chat:
+  # [Discord][最高身分組]名稱 >> 訊息
+  # {role} 最高身分組（套用身分組顏色，沒有身分組時為空）、{name} Discord 上顯示的名稱（伺服器暱稱）
+  # {reply} 回覆別人時的提示、{message} 訊息（網址、圖片、附件都會變成可點擊的文字）
+  discord-to-minecraft: "<#5865F2>[Discord]</#5865F2>{role}<white>{name}</white><gray> >> </gray>{reply}<white>{message}</white>"
+  role: "[{role}]"
+  reply: "<gray>(回覆 {name}) </gray>"
+  # 訊息裡的網址（遊戲內不直接顯示網址，點擊開啟）
+  link: "<aqua><u>[連結]</u></aqua>"
+  image-link: "<aqua><u>[圖片]</u></aqua>"
+  # 附件與貼圖，{file} 檔名、{name} 貼圖名稱
+  image: " <aqua><u>[圖片]</u></aqua>"
+  video: " <aqua><u>[影片]</u></aqua>"
+  attachment: " <aqua><u>[檔案：{file}]</u></aqua>"
+  sticker: " <aqua><u>[貼圖：{name}]</u></aqua>"
+  # 滑鼠移到連結上顯示，{name} 檔名或網址
+  link-hover: "<gray>{name}\n<yellow>點擊開啟"
 
 lookup:
   searching: "<gray>正在查詢 {name}…"
@@ -98,7 +153,7 @@ console:
   discord-connecting: "正在連線 Discord…"
   discord-ready: "Discord 機器人已連線：{name}"
   discord-failed: "Discord 連線失敗：{reason}"
-  slash-registered: "已註冊斜線指令 /querydc、/querymc。"
+  slash-registered: "已註冊斜線指令 /querydc、/querymc、/playerlist。"
   slash-failed: "註冊斜線指令失敗：{reason}"
   dm-failed: "無法私訊 {user}（對方可能關閉私訊）。"
   log-channel-missing: "找不到管理員日誌頻道 {id}。"
@@ -110,14 +165,30 @@ console:
   update-latest: "已是最新版本。"
   update-dev: "目前版本比 GitHub 新（開發版）。"
   update-failed: "檢查更新失敗：{reason}"
+  conflict-discordsrv: "偵測到 DiscordSRV，聊天互通、控制台、通知、狀態與 playerlist 已停用（避免重複）。移除 DiscordSRV 後重啟即可使用。"
+  conflict-interactivechat: "偵測到 InteractiveChat，遊戲內物品展示與提及已停用（避免重複）。移除 InteractiveChat 後重啟即可使用。"
+  chat-channel-missing: "找不到聊天頻道 {id}，請確認 chat.channel-id。"
+  console-channel-missing: "找不到控制台頻道 {id}，請確認 console.channel-id。"
+  notify-channel-missing: "找不到通知頻道 {id}，請確認 notifications.{type}.channel-id。"
+  webhook-ready: "聊天頻道 Webhook 已就緒。"
+  webhook-failed: "無法建立 Webhook（機器人需要「管理 Webhook」權限），改用機器人發送：{reason}"
+  console-command: "Discord 使用者 {user}（{id}）執行指令：{command}"
+  console-command-blocked: "Discord 使用者 {user}（{id}）嘗試執行被禁止的指令：{command}"
+  role-failed: "無法設定 Discord 身分組或暱稱：{reason}"
+  assets-downloading: "正在背景下載原版材質（第一次約 4.5 MB），完成前 Discord 物品展示只會顯示文字…"
+  assets-ready: "物品展示圖片已就緒（Minecraft {version}）。"
+  assets-failed: "無法準備物品展示圖片，Discord 物品展示改為只顯示文字：{reason}"
 
 # HTTP API 回應的 message 欄位
 http:
   unauthorized: "API 金鑰錯誤"
   disabled: "API 金鑰未設定"
   method: "只支援 GET"
-  missing-action: "缺少 action（query_dc、query_mc、all）"
-  unknown-action: "未知的 action（query_dc、query_mc、all）"
+  missing-action: "缺少 action（check、bound、unbound、query_dc、query_mc）"
+  unknown-action: "未知的 action（check、bound、unbound、query_dc、query_mc）"
+  player-unknown: "找不到這位玩家（沒有進過伺服器）"
+  invalid-scope: "scope 只能是 all 或 online"
+  not-ready: "玩家名單還在載入，請稍後再試"
   missing-target: "缺少 target"
   invalid-discord-id: "Discord ID 格式不正確"
   player-unbound: "該玩家尚未綁定 Discord"
@@ -167,3 +238,73 @@ discord:
     discord-header: "🔍 <@{discord_id}>（`{discord_id}`）綁定的 Minecraft 帳號："
     discord-entry: "- **{player}**（`{uuid}`）"
     discord-unbound: "❌ <@{discord_id}>（`{discord_id}`）沒有綁定 Minecraft 帳號。"
+    playerlist-description: "查看伺服器線上玩家"
+  # 物品展示的嵌入卡片，{player} 玩家名稱、{item} 物品名稱、{amount} 數量
+  showcase:
+    item-author: "{player} 的物品"
+    item-title: "{item}"
+    item-title-amount: "{item} x{amount}"
+    inventory-author: "{player} 的背包"
+    inventory-color: "#AAAAAA"
+    ender-author: "{player} 的終界箱"
+    ender-color: "#AA00AA"
+  # 遊戲聊天傳到 Discord
+  chat:
+    # 使用 Webhook 時的名稱與內容，{player} 玩家名稱、{message} 訊息
+    webhook-name: "{player}"
+    webhook-message: "{message}"
+    # 沒有 Webhook 時由機器人發送的格式
+    bot-message: "**{player}**：{message}"
+  # 線上玩家清單（/playerlist 與聊天頻道關鍵字）
+  playerlist:
+    # 圖片標題（跟遊戲內 Tab 清單一樣的圖片；圖片功能沒開時改用下面的文字）
+    image-title: "<green>線上玩家 ({online}/{max})"
+    header: "🟢 **線上玩家（{online}/{max}）**"
+    # {players} 玩家名稱（用 separator 分隔）
+    body: "{players}"
+    separator: "、"
+    empty: "目前沒有玩家在線上。"
+    offline: "伺服器目前沒有回應。"
+  # 通知（顯示在玩家頭像旁），{player} 玩家名稱
+  notify:
+    server-start:
+      text: "✅ 伺服器已開啟"
+      color: "#2ECC71"
+    server-stop:
+      text: "🛑 伺服器已關閉"
+      color: "#E74C3C"
+    join:
+      text: "{player} 加入了伺服器"
+      color: "#00FF00"
+    quit:
+      text: "{player} 離開了伺服器"
+      color: "#FF0000"
+    first-join:
+      text: "{player} 首次加入了伺服器"
+      color: "#FFFF00"
+    death:
+      # {message} 原版死亡訊息
+      text: "💀 {message}"
+      color: "#2C2F33"
+    # 成就，{advancement} 成就名稱、{description} 成就說明
+    advancement-task:
+      text: "{player} 已完成進度 {advancement}"
+      description: "{description}"
+      color: "#00FF00"
+    advancement-goal:
+      text: "{player} 已達成目標 {advancement}"
+      description: "{description}"
+      color: "#00FF00"
+    advancement-challenge:
+      text: "{player} 已完成挑戰 {advancement}"
+      description: "{description}"
+      color: "#A020F0"
+  # 機器人狀態與頻道主題，{online} 線上人數、{max} 上限、{tps} TPS
+  status:
+    presence: "{online}/{max} 位玩家在線"
+    topic: "🟢 線上 {online}/{max} 人 ｜ TPS {tps}"
+    topic-offline: "🔴 伺服器已關閉"
+  # 控制台指令的反應
+  console:
+    blocked: "⛔ 這個指令不能從 Discord 執行。"
+    no-permission: "⛔ 你沒有執行後台指令的權限。"

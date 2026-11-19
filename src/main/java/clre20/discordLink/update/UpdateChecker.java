@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
  */
 public final class UpdateChecker {
 
-    public static final String REPO = "clre20/Discord-link-Minecraft-Plugin";
+    public static final String REPO = "clre20/Discord-link";
     public static final String PAGE = "https://github.com/" + REPO + "/releases";
     private static final long CACHE_MILLIS = 10 * 60 * 1000L;
     /** 檢查失敗時 1 分鐘後才再試。 */

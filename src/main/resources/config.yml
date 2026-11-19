@@ -1,6 +1,6 @@
 # DiscordLink 設定檔
 # 顯示文字都在 messages.yml
-config-version: 2
+config-version: 4
 
 # 訊息前綴（MiniMessage 或 & 顏色碼）
 prefix: "<aqua>[DiscordLink]</aqua> "
@@ -20,6 +20,10 @@ discord:
     enabled: true
     # 管理員日誌頻道 ID
     channel-id: "YOUR_ADMIN_LOG_CHANNEL_ID"
+  # 綁定後自動給的身分組 ID（留空不給；解除綁定時移除）
+  linked-role-id: ""
+  # 綁定後把 Discord 暱稱改成 Minecraft 名稱（機器人需要「管理暱稱」權限，且身分組要比對方高）
+  nickname-sync: false
 
 verification:
   # true：未綁定不能進服；false：可以進服，用 /dclink link 綁定
@@ -32,6 +36,131 @@ verification:
   max-failed-attempts: 5
   # 暫停時間（分鐘），從第一次輸錯開始算
   attempt-window-minutes: 10
+
+# ==========================================
+#  聊天互通（遊戲 ⇄ Discord）
+# ==========================================
+chat:
+  enabled: true
+  # 聊天頻道 ID
+  channel-id: ""
+  # 用 Webhook 送出遊戲訊息（顯示玩家頭像與名稱；機器人需要「管理 Webhook」權限，失敗時改用機器人發送）
+  use-webhook: true
+  # 玩家頭像網址，{uuid} 玩家 UUID、{name} 玩家名稱
+  avatar-url: "https://mc-heads.net/avatar/{uuid}/128"
+  # 跳脫遊戲訊息裡的 Discord Markdown（避免玩家用 # 標題、連結等格式洗版）
+  escape-markdown: true
+  # Discord 傳到遊戲的訊息最多幾個字（超過會截斷）
+  max-length-to-minecraft: 256
+  # 在聊天頻道輸入這個字（不分大小寫）會列出線上玩家；留空關閉（/playerlist 斜線指令不受影響）
+  playerlist-keyword: "playerlist"
+  # 線上玩家清單訊息幾秒後自動刪除（0 = 不刪除）
+  playerlist-delete-seconds: 30
+
+# ==========================================
+#  控制台頻道
+# ==========================================
+console:
+  enabled: false
+  # 控制台頻道 ID（請設成只有管理員看得到）
+  channel-id: ""
+  # 後台訊息合併後送出的間隔（秒，最少 1）
+  flush-seconds: 2
+  # 把 IP 位址遮成 *.*.*.*
+  mask-ip: true
+  # 符合這些正規表示式的後台訊息不送到 Discord
+  filters:
+    - "(?i)issued server command: /(login|register|l|reg|changepassword)\\b"
+  # 允許在控制台頻道輸入後台指令
+  allow-commands: true
+  # 可以執行指令的身分組 ID（留空 = 只有「管理員」權限的成員）
+  command-role-ids: []
+  # 禁止執行的指令（開頭符合就擋下；minecraft:stop 與 execute ... run stop 也會擋）
+  command-blacklist:
+    - "stop"
+    - "restart"
+    - "op"
+    - "deop"
+    - "lp"
+    - "luckperms"
+
+# ==========================================
+#  Discord 通知
+# ==========================================
+notifications:
+  # 每一種通知都可以分別開關、分別指定頻道 ID（留空 = 聊天頻道）
+  # 例：聊天與物品展示在聊天頻道；加入、離開、成就一個頻道；死亡、啟動、關閉另一個頻道
+  server-start:
+    enabled: true
+    channel-id: ""
+  server-stop:
+    enabled: true
+    channel-id: ""
+  join:
+    enabled: true
+    channel-id: ""
+  quit:
+    enabled: true
+    channel-id: ""
+  # 第一次進服用 first-join 的訊息（關掉時改用一般的加入訊息與 join 的頻道）
+  first-join:
+    enabled: true
+    channel-id: ""
+  death:
+    enabled: true
+    channel-id: ""
+  # 原版成就與 CustomMilestone 的自訂成就（遵守 announceAdvancements 遊戲規則）
+  advancement:
+    enabled: true
+    channel-id: ""
+
+# ==========================================
+#  機器人狀態與頻道主題
+# ==========================================
+status:
+  # 機器人狀態顯示線上人數
+  presence: true
+  # 更新間隔（秒，最少 30）
+  presence-interval-seconds: 60
+  # 聊天頻道的主題顯示線上人數與 TPS（機器人需要「管理頻道」權限）
+  channel-topic: false
+  # 更新間隔（分鐘，最少 10；Discord 限制頻道主題 10 分鐘只能改 2 次）
+  topic-interval-minutes: 10
+
+# ==========================================
+#  物品展示（[item]、[inv]、[ender]）
+# ==========================================
+showcase:
+  enabled: true
+  # 觸發文字（不分大小寫）
+  keywords:
+    item: ["[item]", "[i]"]
+    inventory: ["[inv]", "[inventory]"]
+    ender: ["[ender]", "[enderchest]"]
+  # [inv]、[ender] 的冷卻時間（秒）
+  cooldown-seconds: 5
+  # 背包快照可以點開的時間（分鐘）
+  snapshot-minutes: 5
+  # 同步到 Discord 時附上圖片（第一次啟用時會在背景下載原版材質，約 4.5 MB）
+  discord-images: true
+  # 圖片倍率（1～4）
+  image-scale: 2
+  # 物品說明框顯示進階資訊（物品 ID、元件數量，同 F3+H）
+  advanced-tooltip: true
+  # 圖片裡物品名稱的語言（原版語言代碼，例如 zh_tw、zh_cn、en_us）
+  language: "zh_tw"
+
+# ==========================================
+#  提及玩家
+# ==========================================
+mention:
+  enabled: true
+  # true：只有 @名稱 會提及；false：直接打名稱也會
+  require-at: false
+  # 被提及時播放的音效（原版音效 ID，留空不播放）
+  sound: "minecraft:entity.experience_orb.pickup"
+  # 同一位玩家提及別人的冷卻時間（秒），冷卻中只標色不通知
+  cooldown-seconds: 3
 
 # HTTP API（經 HttpHub 提供，網址：http://<IP>:<HttpHub 端口>/discordlink/api/query）
 # 需要安裝 HttpHub：https://github.com/clre20/HttpHub
