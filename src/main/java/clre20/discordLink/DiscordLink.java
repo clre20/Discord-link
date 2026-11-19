@@ -1,6 +1,14 @@
 package clre20.discordLink;
 
 import clre20.discordLink.api.ApiBridge;
+import clre20.discordLink.bridge.ChatBridge;
+import clre20.discordLink.bridge.ConsoleRelay;
+import clre20.discordLink.bridge.Notifier;
+import clre20.discordLink.bridge.RoleSync;
+import clre20.discordLink.bridge.StatusUpdater;
+import clre20.discordLink.render.RenderService;
+import clre20.discordLink.showcase.ShowcaseListener;
+import clre20.discordLink.showcase.SnapshotMenu;
 import clre20.discordLink.command.DiscordLinkCommand;
 import clre20.discordLink.config.Messages;
 import clre20.discordLink.config.PluginConfig;
@@ -33,6 +41,16 @@ public final class DiscordLink extends JavaPlugin {
     private ApiBridge api;
     private UpdateChecker updates;
     private UpdateNotifier updateNotifier;
+    private RenderService render;
+    private clre20.discordLink.data.PlayerIndex players;
+    private ChatBridge chat;
+    private ConsoleRelay console;
+    private Notifier notifier;
+    private StatusUpdater status;
+    private RoleSync roles;
+    private ShowcaseListener showcase;
+    private boolean discordSrv;
+    private boolean interactiveChat;
 
     @Override
     public void onEnable() {
@@ -63,8 +81,46 @@ public final class DiscordLink extends JavaPlugin {
         updates = new UpdateChecker(getPluginMeta().getVersion());
         updateNotifier = new UpdateNotifier(this);
         api = new ApiBridge(this);
-        discord = new DiscordBot(this, new DiscordListener(this));
+        // 與舊插件同時存在時停用重疊的功能
+        discordSrv = getServer().getPluginManager().isPluginEnabled("DiscordSRV");
+        interactiveChat = getServer().getPluginManager().isPluginEnabled("InteractiveChat");
+        if (discordSrv) {
+            getLogger().warning(messages.console("conflict-discordsrv"));
+        }
+        if (interactiveChat) {
+            getLogger().warning(messages.console("conflict-interactivechat"));
+        }
 
+        render = new RenderService(this);
+        roles = new RoleSync(this);
+        chat = new ChatBridge(this);
+        chat.setConflict(discordSrv);
+        console = new ConsoleRelay(this);
+        console.setConflict(discordSrv);
+        notifier = new Notifier(this);
+        notifier.setConflict(discordSrv);
+        status = new StatusUpdater(this);
+        status.setConflict(discordSrv);
+        SnapshotMenu menu = new SnapshotMenu(this);
+        showcase = new ShowcaseListener(this, menu);
+        showcase.setDisabled(interactiveChat);
+        chat.setShowcase(showcase);
+
+        discord = new DiscordBot(this, jda -> {
+            chat.onReady(jda);
+            notifier.onReady(jda);
+        }, new DiscordListener(this), chat, console);
+
+        players = new clre20.discordLink.data.PlayerIndex();
+        var pm = getServer().getPluginManager();
+        pm.registerEvents(players, this);
+        // 進過伺服器的玩家名單：伺服器啟動完成後在主執行緒讀一次
+        getServer().getScheduler().runTask(this, players::load);
+        pm.registerEvents(menu, this);
+        pm.registerEvents(showcase, this);
+        pm.registerEvents(chat, this);
+        pm.registerEvents(notifier, this);
+        pm.registerEvents(roles, this);
         getServer().getPluginManager().registerEvents(new LoginListener(this), this);
         getServer().getPluginManager().registerEvents(updateNotifier, this);
         getServer().getPluginManager().registerEvents(api, this);
@@ -78,6 +134,9 @@ public final class DiscordLink extends JavaPlugin {
 
         printMode();
         api.refresh(true);
+        render.configure();
+        console.configure();
+        status.configure();
         startDiscord();
         updateNotifier.checkOnStartup();
     }
@@ -87,8 +146,29 @@ public final class DiscordLink extends JavaPlugin {
         if (api != null) {
             api.stop();
         }
+        if (status != null) {
+            status.sendOffline();
+        }
+        if (notifier != null) {
+            notifier.sendStop();
+        }
+        if (console != null) {
+            console.stop();
+        }
         if (discord != null) {
             discord.shutdown();
+        }
+        if (render != null) {
+            render.shutdown();
+        }
+        if (showcase != null) {
+            showcase.clear();
+        }
+        if (roles != null) {
+            roles.clear();
+        }
+        if (players != null) {
+            players.clear();
         }
         if (lookup != null) {
             lookup.shutdown();
@@ -119,6 +199,9 @@ public final class DiscordLink extends JavaPlugin {
         }
         if (messages.lastFilled() > 0) {
             getLogger().info(messages.console("messages-filled", "count", messages.lastFilled()));
+        }
+        for (String bad : config.badFilters()) {
+            getLogger().warning("console.filters: invalid regex " + bad);
         }
         if (config.badDbName()) {
             getLogger().warning(messages.console("bad-db-name"));
@@ -159,6 +242,10 @@ public final class DiscordLink extends JavaPlugin {
         loadFiles();
         codes.configure(config.codeExpiryMinutes(), config.attemptWindowMinutes());
         api.refresh(true);
+        render.configure();
+        console.configure();
+        status.configure();
+        roles.resetWarning();
         printMode();
         messages.send(sender, "reload.done");
         if (!config.hasToken()) {
@@ -169,7 +256,27 @@ public final class DiscordLink extends JavaPlugin {
         } else if (!config.token().equals(oldToken) || (!discord.online() && !discord.connecting())) {
             messages.send(sender, "reload.discord-restart");
             discord.connect(config.token());
+        } else if (discord.jda() != null) {
+            // 頻道可能變了：重新檢查並準備 Webhook
+            chat.onReady(discord.jda());
         }
+    }
+
+    /** 這則聊天是否需要為 Discord 準備圖片資料。 */
+    public boolean wantsDiscordImages() {
+        return !discordSrv && config.chatEnabled() && config.discordImages() && render.ready() && discord.online();
+    }
+
+    public RenderService render() {
+        return render;
+    }
+
+    public clre20.discordLink.data.PlayerIndex players() {
+        return players;
+    }
+
+    public RoleSync roles() {
+        return roles;
     }
 
     public PluginConfig config() {

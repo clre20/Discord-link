@@ -3,6 +3,7 @@ package clre20.discordLink.api;
 import clre20.discordLink.DiscordLink;
 import clre20.discordLink.config.PluginConfig;
 import clre20.discordLink.data.LinkStore;
+import clre20.discordLink.data.PlayerIndex;
 import clre20.discordLink.util.Ids;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -51,9 +52,11 @@ public final class ApiService {
             return error(400, "missing-action");
         }
         return switch (action.toLowerCase(Locale.ROOT)) {
+            case "check" -> target == null || target.isBlank() ? error(400, "missing-target") : check(target.trim());
+            case "bound", "all" -> bound();
+            case "unbound" -> unbound(query.apply("scope"));
             case "query_dc" -> target == null || target.isBlank() ? error(400, "missing-target") : queryDc(target.trim());
             case "query_mc" -> target == null || target.isBlank() ? error(400, "missing-target") : queryMc(target.trim());
-            case "all" -> all();
             default -> error(400, "unknown-action");
         };
     }
@@ -97,16 +100,90 @@ public final class ApiService {
         return ok(o);
     }
 
-    private Result all() {
+    /** 這位玩家有沒有綁定（名稱或 UUID）。 */
+    private Result check(String target) {
+        LinkStore store = plugin.store();
+        PlayerIndex index = plugin.players();
+        UUID uuid = Ids.parseUuid(target);
+        if (uuid == null && target.length() <= 17) {
+            uuid = store.findByName(target);
+            if (uuid == null) {
+                uuid = index.findByName(target);
+            }
+        }
+        JsonObject o = success();
+        if (uuid == null) {
+            o.addProperty("known", false);
+            o.addProperty("bound", false);
+            o.addProperty("message", text("player-unknown"));
+            return ok(o);
+        }
+        LinkStore.Binding b = store.binding(uuid);
+        String name = b != null && b.name() != null && !b.name().isEmpty() ? b.name() : index.name(uuid);
+        o.addProperty("known", name != null);
+        o.addProperty("bound", b != null);
+        o.addProperty("player", name == null ? target : name);
+        o.addProperty("uuid", uuid.toString());
+        o.addProperty("online", index.isOnline(uuid));
+        o.addProperty("bypass", store.isBypassed(uuid));
+        if (b != null) {
+            o.addProperty("discord_id", b.discordId());
+        }
+        return ok(o);
+    }
+
+    /** 所有已綁定的玩家。 */
+    private Result bound() {
+        PlayerIndex index = plugin.players();
         var list = plugin.store().allBindings();
         JsonArray arr = new JsonArray();
         for (LinkStore.Binding b : list) {
             JsonObject e = entry(b);
             e.addProperty("discord_id", b.discordId());
+            e.addProperty("online", index.isOnline(b.uuid()));
             arr.add(e);
         }
         JsonObject o = success();
         o.addProperty("total", list.size());
+        o.add("data", arr);
+        return ok(o);
+    }
+
+    /**
+     * 沒有綁定的玩家。
+     *
+     * @param scope all（預設，進過伺服器的所有玩家）或 online（目前在線）
+     */
+    private Result unbound(String scope) {
+        boolean onlineOnly = scope != null && scope.trim().equalsIgnoreCase("online");
+        if (scope != null && !scope.isBlank() && !onlineOnly && !scope.trim().equalsIgnoreCase("all")) {
+            return error(400, "invalid-scope");
+        }
+        PlayerIndex index = plugin.players();
+        if (!index.loaded()) {
+            return error(503, "not-ready");
+        }
+        LinkStore store = plugin.store();
+        java.util.List<java.util.Map.Entry<UUID, String>> rows = new java.util.ArrayList<>();
+        for (var e : index.known().entrySet()) {
+            if (store.isBound(e.getKey()) || (onlineOnly && !index.isOnline(e.getKey()))) {
+                continue;
+            }
+            rows.add(e);
+        }
+        rows.sort(java.util.Map.Entry.comparingByValue(String.CASE_INSENSITIVE_ORDER));
+        JsonArray arr = new JsonArray();
+        for (var e : rows) {
+            JsonObject j = new JsonObject();
+            j.addProperty("player", e.getValue());
+            j.addProperty("uuid", e.getKey().toString());
+            j.addProperty("online", index.isOnline(e.getKey()));
+            j.addProperty("bypass", store.isBypassed(e.getKey()));
+            arr.add(j);
+        }
+        JsonObject o = success();
+        o.addProperty("scope", onlineOnly ? "online" : "all");
+        o.addProperty("total", rows.size());
         o.add("data", arr);
         return ok(o);
     }

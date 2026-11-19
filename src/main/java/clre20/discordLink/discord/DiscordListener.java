@@ -100,6 +100,7 @@ public final class DiscordListener extends ListenerAdapter {
 
         reply(event, embed("verify-success", Color.GREEN, avatar,
                 "player", safeName, "uuid", uuid.toString().substring(0, 8)));
+        plugin.roles().onLinked(author.getId(), name);
 
         if (config.privateMessage()) {
             MessageEmbed dm = embed("private-message", Color.GREEN, avatar, "player", safeName);

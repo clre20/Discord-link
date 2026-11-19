@@ -224,6 +224,7 @@ public final class DiscordLinkCommand implements TabExecutor {
         LinkStore store = plugin.store();
         if (PluginConfig.isSnowflake(target)) {
             int n = store.unbindDiscord(target);
+            plugin.roles().onUnlinked(target);
             if (n == 0) {
                 msg().send(sender, "admin.discord-unbound", "discord_id", target);
             } else {
@@ -235,6 +236,7 @@ public final class DiscordLinkCommand implements TabExecutor {
         if (b == null || store.unbind(b.uuid()) == null) {
             msg().send(sender, "admin.player-unbound", "player", target);
         } else {
+            plugin.roles().onUnlinked(b.discordId());
             msg().send(sender, "admin.unbind-player", "player", display(b));
         }
     }

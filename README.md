@@ -9,16 +9,17 @@ DiscordLink 是 Paper 伺服器的 Discord 整合插件：帳號綁定、聊天�
   * **自由綁定**：玩家可以進服，用 `/dclink link` 取得代碼。
   * 防止亂猜代碼、免驗證名單、綁定後自動給身分組與同步暱稱。
 * **聊天互通**：
-  * 遊戲聊天用 Webhook 送到 Discord，顯示玩家頭像與名稱；Discord 訊息顯示在遊戲裡（支援回覆、附件連結、表情與提及）。
-  * 已綁定的成員在遊戲裡顯示 Minecraft 名稱；所有訊息都不會觸發 `@everyone`。
+  * 遊戲聊天用 Webhook 送到 Discord，顯示玩家頭像與名稱。
+  * Discord 訊息在遊戲內顯示為 `[Discord][最高身分組]名稱 >> 訊息`（身分組套用 Discord 的顏色）；網址、圖片、影片、檔案、貼圖都變成可點擊的 `[連結]`、`[圖片]` 等文字，不直接顯示網址。
+  * 遊戲內顯示 Discord 上看到的名稱（伺服器暱稱）；所有訊息都不會觸發 `@everyone`。
   * 被禁言插件取消的聊天不會轉送。
 * **控制台頻道**：後台訊息合併後送到 Discord（遮住 IP 與 Token），指定身分組可以在頻道輸入後台指令，並有指令黑名單。
-* **通知**：伺服器啟動／關閉、加入、離開、第一次加入、死亡、成就（含 [CustomMilestone](https://github.com/clre20/CustomMilestone) 的自訂成就）；每一種都能分別開關、分別送到不同頻道；隱身中的玩家不會通知。
-* **線上玩家清單**：在聊天頻道輸入 `playerlist`，或使用斜線指令 `/playerlist`。
+* **通知**：伺服器開啟／關閉（純文字）、加入、離開、首次加入、死亡、成就（附原版成就圖示）（含 [CustomMilestone](https://github.com/clre20/CustomMilestone) 的自訂成就）；每一種都能分別開關、分別送到不同頻道；隱身中的玩家不會通知。
+* **線上玩家清單**：在聊天頻道輸入 `playerlist`，或使用斜線指令 `/playerlist`，回覆跟遊戲內 Tab 清單一樣的圖片（頭像、前綴、延遲）。
 * **機器人狀態與頻道主題**：顯示線上人數與 TPS。
 * **物品展示**（與 InteractiveChat 相同的樣式）：
   * 聊天輸入 `[item]` 變成 `[物品名稱 x數量]`，滑鼠移上去看完整說明，點擊開啟「物品」介面；空手時顯示 `[空氣]`。
-  * `[inv]`、`[ender]` 點擊後開啟背包（含頭顱、藥水效果、裝備）／終界箱快照；所有介面都是唯讀箱子介面。
+  * `[inv]`、`[ender]` 點擊後開啟背包（含頭顱、藥水效果、裝備）／終界箱快照；在介面裡左鍵點物品可以預覽，界伏盒與束口袋會顯示裡面的東西（有「返回」按鈕）；所有介面都是唯讀箱子介面。
   * Discord 端附上嵌入卡片：物品名稱與顏色、右上角物品圖示、與遊戲相同的說明框圖片（含物品 ID 等進階資訊），背包／終界箱則附上介面圖片（第一次使用時自動下載原版材質，約 4.5 MB）。
 * **提及玩家**：聊天中提到線上玩家的名稱，對方會聽到音效並看到提示。
 * **所有文字可改**：遊戲訊息、斷線畫面、Discord 卡片都在 `messages.yml`，支援 MiniMessage 與 `&` 顏色碼。
@@ -131,17 +132,36 @@ notifications:
 
 | action | 參數 | 說明 |
 | :--- | :--- | :--- |
-| `query_dc` | `target`：玩家名稱或 UUID | Minecraft 查 Discord |
+| `check` | `target`：玩家名稱或 UUID | 這位玩家有沒有綁定 |
+| `bound` | — | 所有已綁定的玩家 |
+| `unbound` | `scope`：`all`（預設，進過伺服器的所有玩家）或 `online`（目前在線） | 沒有綁定的玩家 |
+| `query_dc` | `target`：玩家名稱或 UUID | Minecraft 查 Discord（舊版相容） |
 | `query_mc` | `target`：Discord ID | Discord 查 Minecraft |
-| `all` | — | 所有綁定 |
+| `all` | — | 同 `bound`（舊版相容） |
 
-回應範例（`query_dc`）：
+回應範例（`check`）：
 
 ```json
 {
   "status": "success",
+  "known": true,
   "bound": true,
-  "data": { "player": "Steve", "uuid": "8667ba71-b85a-4004-af54-4b3a95970922", "discord_id": "123456789012345678" }
+  "player": "Steve",
+  "uuid": "8667ba71-b85a-4004-af54-4b3a95970922",
+  "online": false,
+  "bypass": false,
+  "discord_id": "123456789012345678"
+}
+```
+
+回應範例（`unbound`）：
+
+```json
+{
+  "status": "success",
+  "scope": "all",
+  "total": 1,
+  "data": [ { "player": "Alex", "uuid": "…", "online": true, "bypass": false } ]
 }
 ```
 
@@ -154,9 +174,12 @@ API_URL = "http://localhost:52010/discordlink/api/query"
 API_KEY = "config.yml 裡的 api.key"
 headers = {"Authorization": f"Bearer {API_KEY}"}
 
-print(requests.get(API_URL, headers=headers, params={"action": "all"}).json())
-print(requests.get(API_URL, headers=headers, params={"action": "query_dc", "target": "Steve"}).json())
-print(requests.get(API_URL, headers=headers, params={"action": "query_mc", "target": "123456789012345678"}).json())
+# 這位玩家有沒有綁定
+print(requests.get(API_URL, headers=headers, params={"action": "check", "target": "Steve"}).json())
+# 有誰綁定
+print(requests.get(API_URL, headers=headers, params={"action": "bound"}).json())
+# 有誰沒綁定（進過伺服器的所有玩家；只看在線的玩家加 "scope": "online"）
+print(requests.get(API_URL, headers=headers, params={"action": "unbound"}).json())
 ```
 
 > 從 1.6.x 升級：舊的 `api.port`（25580）已移除，請改用上面的網址。
