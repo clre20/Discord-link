@@ -1,6 +1,7 @@
 package clre20.discordLink.bridge;
 
 import clre20.discordLink.DiscordLink;
+import clre20.discordLink.compatibility.LuckPermsHook;
 import clre20.discordLink.config.Messages;
 import clre20.discordLink.config.PluginConfig;
 import clre20.discordLink.render.ImageComposer;
@@ -456,10 +457,26 @@ public final class ChatBridge extends ListenerAdapter implements Listener {
                     skin = tex.getSkin() == null ? null : tex.getSkin().toString();
                 } catch (RuntimeException ignored) {
                 }
-                rows.add(new PlayerRow(p.playerListName(), skin, p.getPing()));
+                rows.add(new PlayerRow(listName(p), skin, p.getPing()));
             }
         }
-        return new PlayerListData(text, msg.component("playerlist.image-title", "online", players.size(), "max", max), rows);
+        return new PlayerListData(text, msg.component("discord.playerlist.image-title", "online", players.size(), "max", max), rows);
+    }
+
+    /**
+     * 清單上的名稱：預設用 LuckPerms 的前綴＋玩家名稱；
+     * chat.playerlist-name 設成 tab 時用遊戲內 Tab 清單的名稱（例如城鎮插件的前綴）。主執行緒呼叫。
+     */
+    private Component listName(Player p) {
+        if (plugin.config().playerlistName().equals("tab")) {
+            return p.playerListName();
+        }
+        String prefix = LuckPermsHook.prefix(p);
+        Component pre = prefix == null || prefix.isBlank()
+                ? Component.empty()
+                : clre20.discordLink.util.Text.component(prefix.replace('§', '&'));
+        return plugin.messages().componentWith("discord.playerlist.image-name", java.util.Map.of("prefix", pre),
+                "player", p.getName());
     }
 
     /** 最近一次畫好的線上玩家圖片（5 秒內重複查詢直接用，避免被洗頻時一直重畫）。 */

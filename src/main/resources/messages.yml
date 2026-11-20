@@ -259,6 +259,8 @@ discord:
   playerlist:
     # 圖片標題（跟遊戲內 Tab 清單一樣的圖片；圖片功能沒開時改用下面的文字）
     image-title: "<green>線上玩家 ({online}/{max})"
+    # 圖片裡每位玩家的名稱，{prefix} LuckPerms 前綴（含顏色）、{player} 玩家名稱
+    image-name: "{prefix}<white>{player}"
     header: "🟢 **線上玩家（{online}/{max}）**"
     # {players} 玩家名稱（用 separator 分隔）
     body: "{players}"

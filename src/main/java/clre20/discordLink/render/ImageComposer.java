@@ -151,16 +151,17 @@ public final class ImageComposer {
         BufferedImage img = new BufferedImage(width * s, height * s, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
         g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.setColor(new Color(0, 0, 0, 0x80));
-        g.fillRect(0, 0, width * s, height * s);
+        // 標題直接在 Discord 背景上；玩家列在灰色外框裡（與 InteractiveChat DiscordSRV Addon 相同）
         font.draw(g, titleRuns, (width - font.width(titleRuns)) / 2f, 2, s, true);
+        g.setColor(new Color(0x444444));
+        g.fillRect(0, 11 * s, width * s, (height - 11) * s);
         int left = (width - gridW) / 2;
         for (int i = 0; i < n; i++) {
             int c = i / Math.max(1, perCol);
             int r = i % Math.max(1, perCol);
             int x = left + c * (colW + 5);
             int y = 12 + r * 9;
-            g.setColor(new Color(255, 255, 255, 0x20));
+            g.setColor(new Color(0x606060));
             g.fillRect(x * s, y * s, colW * s, 8 * s);
             PlayerRow row = rows.get(i);
             BufferedImage face = row.skinUrl() == null ? null : face(row.skinUrl());

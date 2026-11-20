@@ -7,7 +7,7 @@ authors: [ Clre20 ]
 description: Discord 帳號綁定、聊天互通、控制台、通知與物品展示
 website: https://github.com/clre20/Discord-link
 # DiscordSRV、InteractiveChat 只用來偵測是否同時安裝（有的話停用重疊的功能）
-softdepend: [ HttpHub, DiscordSRV, InteractiveChat ]
+softdepend: [ HttpHub, DiscordSRV, InteractiveChat, LuckPerms ]
 
 commands:
   discordlink:

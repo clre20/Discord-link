@@ -56,6 +56,8 @@ chat:
   playerlist-keyword: "playerlist"
   # 線上玩家清單訊息幾秒後自動刪除（0 = 不刪除）
   playerlist-delete-seconds: 30
+  # 線上玩家清單圖片的名稱：luckperms = LuckPerms 前綴＋玩家名稱；tab = 遊戲內 Tab 清單的名稱（例如城鎮前綴）
+  playerlist-name: "luckperms"
 
 # ==========================================
 #  控制台頻道

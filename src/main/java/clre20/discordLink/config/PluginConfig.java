@@ -54,6 +54,7 @@ public final class PluginConfig {
     private volatile int maxLengthToMinecraft = 256;
     private volatile String playerlistKeyword = "playerlist";
     private volatile int playerlistDeleteSeconds = 30;
+    private volatile String playerlistName = "luckperms";
 
     private volatile boolean consoleEnabled;
     private volatile String consoleChannelId = "";
@@ -178,6 +179,8 @@ public final class PluginConfig {
         maxLengthToMinecraft = clamp(c.getInt("chat.max-length-to-minecraft", 256), 16, 2000);
         playerlistKeyword = trim(c.getString("chat.playerlist-keyword", "playerlist"));
         playerlistDeleteSeconds = clamp(c.getInt("chat.playerlist-delete-seconds", 30), 0, 3600);
+        String pn = trim(c.getString("chat.playerlist-name", "luckperms")).toLowerCase(Locale.ROOT);
+        playerlistName = pn.equals("tab") ? "tab" : "luckperms";
 
         consoleEnabled = c.getBoolean("console.enabled", false);
         consoleChannelId = trim(c.getString("console.channel-id", ""));
@@ -356,6 +359,7 @@ public final class PluginConfig {
     public int maxLengthToMinecraft() { return maxLengthToMinecraft; }
     public String playerlistKeyword() { return playerlistKeyword; }
     public int playerlistDeleteSeconds() { return playerlistDeleteSeconds; }
+    public String playerlistName() { return playerlistName; }
 
     public boolean consoleEnabled() { return consoleEnabled && isSnowflake(consoleChannelId); }
     public String consoleChannelId() { return consoleChannelId; }

@@ -6,7 +6,7 @@
 
     <groupId>clre20</groupId>
     <artifactId>DiscordLink</artifactId>
-    <version>1.9.2</version>
+    <version>1.9.3</version>
     <packaging>jar</packaging>
 
     <name>DiscordLink</name>
@@ -99,6 +99,13 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- 線上玩家清單顯示 LuckPerms 的前綴（伺服器上有裝才會用，不打包） -->
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <version>5.4</version>
             <scope>provided</scope>
         </dependency>
         <!-- 擷取後台日誌給控制台頻道（伺服器內附，不打包） -->
