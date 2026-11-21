@@ -78,8 +78,8 @@ chat:
   # [Discord][最高身分組]名稱 >> 訊息
   # {role} 最高身分組（套用身分組顏色，沒有身分組時為空）、{name} Discord 上顯示的名稱（伺服器暱稱）
   # {reply} 回覆別人時的提示、{message} 訊息（網址、圖片、附件都會變成可點擊的文字）
-  discord-to-minecraft: "<#5865F2>[Discord]</#5865F2>{role}<white>{name}</white><gray> >> </gray>{reply}<white>{message}</white>"
-  role: "[{role}]"
+  discord-to-minecraft: "<#5865F2>[Discord]</#5865F2> {role}<white>{name}</white><gray> >> </gray>{reply}<white>{message}</white>"
+  role: "[{role}] "
   reply: "<gray>(回覆 {name}) </gray>"
   # 訊息裡的網址（遊戲內不直接顯示網址，點擊開啟）
   link: "<aqua><u>[連結]</u></aqua>"
