@@ -78,6 +78,10 @@ public final class DiscordBot {
         return ready && jda != null;
     }
 
+    public boolean ready() {
+        return online();
+    }
+
     /** 關服時呼叫（主執行緒）：等待連線執行緒結束並關閉連線，避免插件卸載後背景執行緒還在跑。 */
     public void shutdown() {
         lifecycle.shutdownNow();

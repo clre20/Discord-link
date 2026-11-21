@@ -59,6 +59,11 @@ public final class DiscordLinkCommand implements TabExecutor {
                     plugin.reload(sender);
                 }
             }
+            case "status" -> {
+                if (check(sender, PERM_ADMIN)) {
+                    status(sender);
+                }
+            }
             case "bypass" -> {
                 if (check(sender, PERM_ADMIN)) {
                     bypass(sender, label, args);
@@ -84,6 +89,33 @@ public final class DiscordLinkCommand implements TabExecutor {
         }
         msg().send(sender, "no-permission");
         return false;
+    }
+
+    private void status(CommandSender sender) {
+        sender.sendMessage("§e=== DiscordLink 機器人與接口狀態 ===");
+        boolean ready = plugin.bot() != null && plugin.bot().ready();
+        net.dv8tion.jda.api.JDA jda = plugin.bot() != null ? plugin.bot().jda() : null;
+        if (ready && jda != null) {
+            String botTag = jda.getSelfUser().getName();
+            long ping = jda.getGatewayPing();
+            sender.sendMessage("§f- 機器人狀態: §a運行中 §7(Bot: §b" + botTag + "§7, Ping: §e" + ping + "ms§7)");
+        } else {
+            sender.sendMessage("§f- 機器人狀態: §c未連線");
+        }
+        int bindingsCount = plugin.store() != null ? plugin.store().allBindings().size() : 0;
+        sender.sendMessage("§f- 已綁定玩家總數: §a" + bindingsCount + " §f人");
+
+        var botService = plugin.botService();
+        List<clre20.discordLink.api.DiscordBotService.PluginDiscordInfo> list = botService != null ? botService.getConnectedPlugins() : List.of();
+        sender.sendMessage("§e=== 已連接與調用 Bot 接口的插件 (" + list.size() + ") ===");
+        if (list.isEmpty()) {
+            sender.sendMessage("§7目前尚無外部插件調用 DiscordLink 接口。");
+        } else {
+            for (clre20.discordLink.api.DiscordBotService.PluginDiscordInfo info : list) {
+                sender.sendMessage("§f- §b" + info.pluginName() + " §8| 私訊: §f" + info.dmCount()
+                        + " §8| 頻道: §f" + info.channelCount() + " §8| 查詢: §f" + info.queryCount());
+            }
+        }
     }
 
     private void help(CommandSender sender, String label) {
@@ -301,6 +333,7 @@ public final class DiscordLinkCommand implements TabExecutor {
                 subs.add("admin");
                 subs.add("bypass");
                 subs.add("reload");
+                subs.add("status");
             }
             return filter(subs, args[0]);
         }

@@ -43,6 +43,7 @@ public final class DiscordLink extends JavaPlugin {
     private UpdateNotifier updateNotifier;
     private RenderService render;
     private clre20.discordLink.data.PlayerIndex players;
+    private clre20.discordLink.api.DiscordBotServiceImpl botService;
     private ChatBridge chat;
     private ConsoleRelay console;
     private Notifier notifier;
@@ -111,6 +112,9 @@ public final class DiscordLink extends JavaPlugin {
             notifier.onReady(jda);
         }, new DiscordListener(this), chat, console);
 
+        botService = new clre20.discordLink.api.DiscordBotServiceImpl(this);
+        getServer().getServicesManager().register(clre20.discordLink.api.DiscordBotService.class, botService, this, org.bukkit.plugin.ServicePriority.Normal);
+
         players = new clre20.discordLink.data.PlayerIndex();
         var pm = getServer().getPluginManager();
         pm.registerEvents(players, this);
@@ -138,7 +142,11 @@ public final class DiscordLink extends JavaPlugin {
         console.configure();
         status.configure();
         startDiscord();
-        updateNotifier.checkOnStartup();
+        if (getServer().getPluginManager().isPluginEnabled("HttpHub") && clre20.httpHub.api.HttpHubAPI.isAvailable()) {
+            clre20.httpHub.api.HttpHubAPI.registerUpdateCheck(this, "clre20/Discord-link-Minecraft-Plugin", getPluginMeta().getVersion(), "discordlink.version", null);
+        } else {
+            updateNotifier.checkOnStartup();
+        }
     }
 
     @Override
@@ -301,6 +309,14 @@ public final class DiscordLink extends JavaPlugin {
 
     public DiscordBot discord() {
         return discord;
+    }
+
+    public DiscordBot bot() {
+        return discord;
+    }
+
+    public clre20.discordLink.api.DiscordBotServiceImpl botService() {
+        return botService;
     }
 
     public UpdateChecker updates() {
